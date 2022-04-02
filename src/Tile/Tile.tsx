@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import React, {FunctionComponent, useCallback} from 'react';
 
-import './styles/tile.css';
+import './styles/tile.less';
 
 export enum Color {
-  YELLOW = 'steelblue',
+  YELLOW = '#EEB902',
   RED = 'tomato',
   NONE = 'none',
 }

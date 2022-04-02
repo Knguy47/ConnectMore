@@ -23,6 +23,15 @@ module.exports = {
         test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
+      {
+        test: /\.less$/i,
+        use: [
+          // compiles Less to CSS
+          'style-loader',
+          'css-loader',
+          'less-loader',
+        ],
+      },
     ],
   },
   devtool: prod ? undefined : 'source-map',
