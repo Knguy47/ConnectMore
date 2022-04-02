@@ -5,7 +5,4 @@ import App from './App';
 
 import './index.css';
 
-ReactDOM.render(
-    <App/>,
-  document.getElementById('app-root'),
-);
+ReactDOM.render(<App />, document.getElementById('app-root'));

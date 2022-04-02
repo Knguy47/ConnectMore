@@ -1,7 +1,7 @@
-import React from 'react';
+import React, {FunctionComponent} from 'react';
 
-const App = () => {
-    return <>Hello World</>
-}
+import Board from './Board/Board';
+
+const App: FunctionComponent = () => <Board />;
 
 export default App;

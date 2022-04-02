@@ -1,0 +1,28 @@
+
+
+.board {
+    width: 700px;
+    height: 600px;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid black;
+    background-color: darkcyan;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+
+@media (max-width: 420px) {
+    .board {
+        width: 375px;
+        height: 300px;
+        display: flex;
+        flex-direction: row;
+        border: 1px solid black;
+        background-color: darkcyan;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+}

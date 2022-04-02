@@ -1,0 +1,18 @@
+.tile {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: white;
+    border: 1px solid black;
+}
+
+
+@media (max-width: 420px) {
+    .tile {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background-color: white;
+        border: 1px solid black;
+    }
+}
