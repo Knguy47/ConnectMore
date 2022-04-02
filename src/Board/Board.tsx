@@ -1,71 +1,76 @@
-import React, {useCallback, useState} from 'react';
+import React, {FunctionComponent, useCallback, useReducer} from 'react';
 import Tile, {Color} from '../Tile/Tile';
+import {reducer, BoardActionKind, init} from './boardReducer';
+import type {BoardState} from './boardReducer';
 
 import checkForWinner from './boardUtils';
 
 import './styles/board.less';
 
-interface BoardState {
-  board: Array<Array<number>>;
-  rowCheck: number[];
-  currentPlayer: number;
-  isGameOver: boolean;
-  winner: undefined | number;
-  remainingTiles: number;
-}
+const initialState: BoardState = {
+  board: [
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+  ],
+  currentPlayer: 1,
+  rowCheck: [5, 5, 5, 5, 5, 5, 5],
+  isGameOver: false,
+  isTie: false,
+  winner: undefined,
+  remainingTiles: 42,
+};
 
-const Board = () => {
-  const [gameState, setGameState] = useState<BoardState>({
-    board: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    currentPlayer: 1,
-    rowCheck: [5, 5, 5, 5, 5, 5, 5],
-    isGameOver: false,
-    winner: undefined,
-    remainingTiles: 42,
-  });
+const getColorByPlayer = (player: number) => {
+  let color;
 
-  const {board, currentPlayer, rowCheck, isGameOver} = gameState;
+  if (player === -1) {
+    color = Color.YELLOW;
+  } else if (player === 1) {
+    color = Color.RED;
+  } else {
+    color = Color.NONE;
+  }
+
+  return color;
+};
+
+const Board: FunctionComponent = () => {
+  const [gameState, dispatch] = useReducer(reducer, initialState, init);
+  const {board, currentPlayer, rowCheck, isGameOver, winner} = gameState;
+
+  const handleResetGame = useCallback(() => {
+    dispatch({
+      type: BoardActionKind.RESET,
+      payload: initialState,
+    });
+  }, []);
 
   const handleOnClick = useCallback(
     (rowIndex: number, colIndex: number) => {
       // Can only add if the tile is not taken
-      if (board[rowCheck[colIndex]][colIndex] === 0 && rowCheck[colIndex] >= 0) {
-        setGameState(
-          ({
-            board: prevBoard,
-            currentPlayer: prevPlayer,
-            rowCheck: prevRowCheck,
-            remainingTiles: prevRemainingTiles,
-          }) => {
-            const rowToAdd = prevRowCheck[colIndex];
-            const newBoard = [...prevBoard];
+      if (rowCheck[colIndex] >= 0 && board[rowCheck[colIndex]][colIndex] === 0) {
+        dispatch({type: BoardActionKind.DECREASE_COUNT});
 
-            // set the tile as taken
-            newBoard[rowToAdd][colIndex] = currentPlayer;
+        // set the tile as taken
+        const rowToAdd = rowCheck[colIndex];
+        const newBoard = [...board];
+        newBoard[rowToAdd][colIndex] = currentPlayer;
+        const hasWinner = checkForWinner(newBoard, rowToAdd, colIndex, currentPlayer);
 
-            const hasWon = checkForWinner(newBoard, rowToAdd, colIndex, currentPlayer);
+        // update which rows can be added to
+        const newRowCheck = [...rowCheck];
+        newRowCheck[colIndex] -= 1;
 
-            // update which row can be added to
-            const newRowCheck = [...prevRowCheck];
-            newRowCheck[colIndex] -= 1;
-
-            return {
-              board: newBoard,
-              currentPlayer: -prevPlayer,
-              rowCheck: newRowCheck,
-              isGameOver: hasWon,
-              winner: prevPlayer,
-              remainingTiles: prevRemainingTiles - 1,
-            };
-          },
-        );
+        dispatch({type: BoardActionKind.UPDATE_ROW, payload: newRowCheck});
+        dispatch({
+          type: BoardActionKind.UPDATE_BOARD,
+          payload: {board: newBoard, winner: hasWinner ? currentPlayer : 0},
+        });
+        dispatch({type: BoardActionKind.UPDATE_PLAYER});
       }
     },
     [currentPlayer],
@@ -73,40 +78,15 @@ const Board = () => {
 
   return (
     <>
-      <div>
-        {/* {rowCheck.map(() => {
-          let color;
-
-          if (currentPlayer === -1) {
-            color = Color.YELLOW;
-          } else if (currentPlayer === 1) {
-            color = Color.RED;
-          } else {
-            color = Color.NONE;
-          }
-
-          return <Tile color={color} />;
-        })} */}
-      </div>
       <div className="board">
         {board.map((row, rowIndex) => {
           return row.map((player, colIndex) => {
-            let color;
-
-            if (player === -1) {
-              color = Color.YELLOW;
-            } else if (player === 1) {
-              color = Color.RED;
-            } else {
-              color = Color.NONE;
-            }
-
             return (
               <Tile
                 colIndex={colIndex}
-                color={color}
+                color={getColorByPlayer(player)}
                 // eslint-disable-next-line react/no-array-index-key
-                key={`${rowIndex}-${colIndex}`}
+                key={`${player}-${rowIndex}-${colIndex}`}
                 onClick={isGameOver ? undefined : handleOnClick}
                 rowIndex={rowIndex}
               />
@@ -114,7 +94,14 @@ const Board = () => {
           });
         })}
       </div>
-      <div>{isGameOver ? `Winner ${-currentPlayer}` : ''}</div>
+      {isGameOver && (
+        <>
+          <button type="button" onClick={handleResetGame}>
+            Play Again
+          </button>
+          <div>{isGameOver ? `Winner ${winner}` : ''}</div>
+        </>
+      )}
     </>
   );
 };
